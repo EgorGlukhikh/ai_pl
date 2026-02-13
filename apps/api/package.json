@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/main.ts",
-    "start": "node dist/main.js",
+    "start": "node dist/main.js || node dist/apps/api/src/main.js",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "node -e \"console.log('api: no tests yet')\""
   },
