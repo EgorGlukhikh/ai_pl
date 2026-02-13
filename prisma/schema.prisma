@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PlanType {
+  FREE
+  PRO
+}
+
+enum AssetType {
+  PHOTO
+  PLAN
+}
+
+enum GenerationStatus {
+  QUEUED
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum TemplateKey {
+  T1
+  T2
+  T3
+  T4
+  T5
+  T6
+}
+
+enum RoomCount {
+  ONE
+  TWO
+  THREE
+  FOUR_PLUS
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  CANCELED
+  FAILED
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String?         @unique
+  name          String?
+  avatarUrl     String?
+  sberSub       String?         @unique
+  telegramId    String?         @unique
+  role          UserRole        @default(USER)
+  plan          PlanType        @default(FREE)
+  planExpiresAt DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  generations   GenerationRequest[]
+  usages        UsageDaily[]
+  subscriptions Subscription[]
+}
+
+model ResidentialComplex {
+  id            String         @id @default(uuid())
+  developerName String
+  name          String
+  city          String
+  description   String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  roomTypes     RoomType[]
+  assets        ComplexAsset[]
+  generations   GenerationRequest[]
+}
+
+model RoomType {
+  id         String             @id @default(uuid())
+  complexId  String
+  rooms      RoomCount
+  label      String
+  createdAt  DateTime           @default(now())
+
+  complex    ResidentialComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  generations GenerationRequest[]
+
+  @@index([complexId])
+  @@unique([complexId, rooms])
+}
+
+model ComplexAsset {
+  id         String             @id @default(uuid())
+  complexId  String
+  type       AssetType
+  url        String
+  meta       Json?
+  createdAt  DateTime           @default(now())
+
+  complex    ResidentialComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+
+  @@index([complexId])
+}
+
+model GenerationRequest {
+  id           String           @id @default(uuid())
+  userId        String
+  complexId     String
+  roomTypeId    String
+  offerText     String
+  status        GenerationStatus @default(QUEUED)
+  error         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  complex       ResidentialComplex @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  roomType      RoomType          @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  variants      StoryVariant[]
+
+  @@index([userId, createdAt])
+}
+
+model StoryVariant {
+  id                 String            @id @default(uuid())
+  generationRequestId String
+  templateKey        TemplateKey
+  linesJson          Json
+  previewPngUrl      String
+  finalPngUrl        String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  generationRequest  GenerationRequest @relation(fields: [generationRequestId], references: [id], onDelete: Cascade)
+
+  @@index([generationRequestId])
+}
+
+model UsageDaily {
+  id        String   @id @default(uuid())
+  userId     String
+  date       DateTime
+  count      Int      @default(0)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model Subscription {
+  id                String             @id @default(uuid())
+  userId             String
+  provider           String
+  status             SubscriptionStatus
+  amount             Int
+  renewalAt          DateTime?
+  externalPaymentId  String?            @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+

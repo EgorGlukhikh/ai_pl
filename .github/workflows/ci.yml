@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ai_pl
+          POSTGRES_USER: ai_pl
+          POSTGRES_PASSWORD: ai_pl
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ai_pl"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    env:
+      DATABASE_URL: postgresql://ai_pl:ai_pl@localhost:5432/ai_pl?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: dev-secret
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build

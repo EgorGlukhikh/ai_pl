@@ -1,0 +1,16 @@
+{
+  "name": "@ai-pl/shared",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node -e \"console.log('shared: no tests yet')\""
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  }
+}
+

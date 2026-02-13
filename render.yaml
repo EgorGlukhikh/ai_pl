@@ -1,0 +1,76 @@
+﻿services:
+  - type: web
+    name: ai-pl-api
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: npm ci && npm run db:generate && npm run build -w @ai-pl/shared && npm run build -w @ai-pl/api
+    startCommand: npm run db:migrate:deploy && npm run start -w @ai-pl/api
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-pl-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ai-pl-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES
+        value: 1d
+      - key: NEXT_PUBLIC_API_URL
+        value: https://ai-pl-api.onrender.com
+      - key: GIGACHAT_CLIENT_ID
+        sync: false
+      - key: GIGACHAT_CLIENT_SECRET
+        sync: false
+      - key: GIGACHAT_AUTH_KEY
+        sync: false
+      - key: GIGACHAT_SCOPE
+        value: GIGACHAT_API_PERS
+      - key: GIGACHAT_AUTH_URL
+        value: https://ngw.devices.sberbank.ru:9443/api/v2/oauth
+      - key: GIGACHAT_API_URL
+        value: https://gigachat.devices.sberbank.ru/api/v1/chat/completions
+      - key: GIGACHAT_MODEL
+        value: GigaChat-2-Max
+      - key: GIGACHAT_INSECURE_TLS
+        value: "false"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: YOOKASSA_SHOP_ID
+        sync: false
+      - key: YOOKASSA_SECRET_KEY
+        sync: false
+      - key: YOOKASSA_RETURN_URL
+        value: https://ai-pl-web.onrender.com/billing/return
+
+  - type: web
+    name: ai-pl-web
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: npm ci && npm run build -w @ai-pl/web
+    startCommand: npm run start -w @ai-pl/web
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NEXT_PUBLIC_API_URL
+        value: https://ai-pl-api.onrender.com
+
+  - type: keyvalue
+    name: ai-pl-redis
+    plan: free
+    ipAllowList: []
+
+databases:
+  - name: ai-pl-db
+    plan: free
+    databaseName: ai_pl
+    user: ai_pl
