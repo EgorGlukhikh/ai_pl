@@ -5,7 +5,7 @@
     plan: free
     autoDeploy: true
     buildCommand: npm ci && npm run db:generate && npm run build -w @ai-pl/shared && npm run build -w @ai-pl/api
-    startCommand: npm run db:migrate:deploy && npm run start -w @ai-pl/api
+    startCommand: npm run db:migrate:deploy && node apps/api/dist/main.js
     envVars:
       - key: NODE_VERSION
         value: 24
