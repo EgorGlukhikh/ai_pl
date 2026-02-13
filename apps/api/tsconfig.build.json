@@ -1,5 +1,11 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "paths": {
+      "@ai-pl/shared": ["../../packages/shared/dist"]
+    }
+  },
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
 
