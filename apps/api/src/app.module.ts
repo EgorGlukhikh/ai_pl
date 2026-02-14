@@ -9,6 +9,7 @@ import { StoriesModule } from "./stories/stories.module";
 import { IntegrationsModule } from "./integrations/integrations.module";
 import { StorageModule } from "./storage/storage.module";
 import { BillingModule } from "./billing/billing.module";
+import { BootstrapModule } from "./bootstrap/bootstrap.module";
 
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 const isTlsRedis = redisUrl.startsWith("rediss://");
@@ -28,6 +29,7 @@ const isTlsRedis = redisUrl.startsWith("rediss://");
     IntegrationsModule,
     StorageModule,
     BillingModule,
+    BootstrapModule,
     GenerationsModule,
     StoriesModule,
   ],
