@@ -107,8 +107,8 @@ export default function Page() {
   }, [token, generation?.id, generation?.status]);
 
   useEffect(() => {
-    const handleTelegramAuth = async (event: CustomEvent) => {
-      const user = event.detail;
+    const handleTelegramAuth = async (event: Event) => {
+      const user = (event as CustomEvent).detail;
       try {
         const response = await api<{ accessToken: string }>("/auth/telegram/callback", {
           method: "POST",
@@ -126,8 +126,8 @@ export default function Page() {
       }
     };
 
-    window.addEventListener("telegram-auth", handleTelegramAuth as EventListener);
-    return () => window.removeEventListener("telegram-auth", handleTelegramAuth as EventListener);
+    window.addEventListener("telegram-auth", handleTelegramAuth);
+    return () => window.removeEventListener("telegram-auth", handleTelegramAuth);
   }, []);
 
   const canGenerate = useMemo(() => {
