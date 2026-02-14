@@ -8,7 +8,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   const port = Number(process.env.PORT || 4000);
   await app.listen(port);
+  console.log(`API listening on port ${port}`);
 }
 
-bootstrap();
-
+bootstrap().catch((err) => {
+  console.error("Bootstrap failed:", err);
+  process.exit(1);
+});

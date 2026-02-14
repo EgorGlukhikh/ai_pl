@@ -10,12 +10,16 @@ import { IntegrationsModule } from "./integrations/integrations.module";
 import { StorageModule } from "./storage/storage.module";
 import { BillingModule } from "./billing/billing.module";
 
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const isTlsRedis = redisUrl.startsWith("rediss://");
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     BullModule.forRoot({
       connection: {
-        url: process.env.REDIS_URL || "redis://localhost:6379",
+        url: redisUrl,
+        ...(isTlsRedis ? { tls: { rejectUnauthorized: false } } : {}),
       },
     }),
     PrismaModule,
