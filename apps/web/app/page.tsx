@@ -21,6 +21,8 @@ type Generation = {
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const TELEGRAM_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "plzn_ai_bot";
+const ENABLE_MOCK_LOGIN = process.env.NEXT_PUBLIC_ENABLE_MOCK_LOGIN === "true";
 
 async function api<T>(path: string, options?: RequestInit, token?: string): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
@@ -38,6 +40,22 @@ async function api<T>(path: string, options?: RequestInit, token?: string): Prom
   }
 
   return response.json() as Promise<T>;
+}
+
+// Глобальный callback для Telegram Widget
+if (typeof window !== "undefined") {
+  (window as any).onTelegramAuth = function (user: {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+    auth_date: number;
+    hash: string;
+  }) {
+    // Отправка события для обработки в React компоненте
+    window.dispatchEvent(new CustomEvent("telegram-auth", { detail: user }));
+  };
 }
 
 export default function Page() {
@@ -87,6 +105,30 @@ export default function Page() {
 
     return () => clearInterval(timer);
   }, [token, generation?.id, generation?.status]);
+
+  useEffect(() => {
+    const handleTelegramAuth = async (event: CustomEvent) => {
+      const user = event.detail;
+      try {
+        const response = await api<{ accessToken: string }>("/auth/telegram/callback", {
+          method: "POST",
+          body: JSON.stringify({
+            telegramId: user.id.toString(),
+            name: `${user.first_name}${user.last_name ? " " + user.last_name : ""}`,
+          }),
+        });
+
+        localStorage.setItem("ai_pl_token", response.accessToken);
+        setToken(response.accessToken);
+        setError("");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Telegram login failed");
+      }
+    };
+
+    window.addEventListener("telegram-auth", handleTelegramAuth as EventListener);
+    return () => window.removeEventListener("telegram-auth", handleTelegramAuth as EventListener);
+  }, []);
 
   const canGenerate = useMemo(() => {
     if (!token) return false;
@@ -202,8 +244,26 @@ export default function Page() {
         <h2>Story Generator</h2>
         {!token ? (
           <div className="field">
-            <button onClick={() => mockLogin("USER")}>Login as USER</button>
-            <button onClick={() => mockLogin("ADMIN")}>Login as ADMIN</button>
+            {/* Telegram Login Widget */}
+            <script
+              async
+              src="https://telegram.org/js/telegram-widget.js?22"
+              data-telegram-login={TELEGRAM_BOT_USERNAME}
+              data-size="large"
+              data-onauth="onTelegramAuth(user)"
+              data-request-access="write"
+            ></script>
+
+            {/* Mock-login для разработки */}
+            {ENABLE_MOCK_LOGIN && (
+              <>
+                <p style={{ marginTop: "1rem", textAlign: "center", fontSize: "0.85rem", color: "#999" }}>
+                  Dev mode
+                </p>
+                <button onClick={() => mockLogin("USER")}>Mock Login as USER</button>
+                <button onClick={() => mockLogin("ADMIN")}>Mock Login as ADMIN</button>
+              </>
+            )}
           </div>
         ) : null}
 

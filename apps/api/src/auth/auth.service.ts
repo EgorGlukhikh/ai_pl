@@ -19,10 +19,25 @@ export class AuthService {
   }
 
   async loginWithTelegram(input: { telegramId: string; name?: string }) {
+    // Проверка на ADMIN ID из переменных окружения
+    const adminTelegramId = process.env.TELEGRAM_ADMIN_ID || "798456148";
+    const isAdmin = input.telegramId === adminTelegramId;
+    const role = isAdmin ? "ADMIN" : "USER";
+    const plan = isAdmin ? "PRO" : "FREE";
+
     const user = await this.prisma.user.upsert({
       where: { telegramId: input.telegramId },
-      update: { name: input.name },
-      create: { telegramId: input.telegramId, name: input.name },
+      update: {
+        name: input.name,
+        // Обновляем роль и план при каждом входе для ADMIN
+        ...(isAdmin && { role, plan }),
+      },
+      create: {
+        telegramId: input.telegramId,
+        name: input.name,
+        role,
+        plan,
+      },
     });
     return this.issueToken(user.id, user.role);
   }

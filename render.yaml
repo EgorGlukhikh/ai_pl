@@ -44,6 +44,8 @@
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         sync: false
+      - key: TELEGRAM_ADMIN_ID
+        sync: false
       - key: YOOKASSA_SHOP_ID
         sync: false
       - key: YOOKASSA_SECRET_KEY
@@ -63,6 +65,10 @@
         value: 24
       - key: NEXT_PUBLIC_API_URL
         value: https://ai-pl-api.onrender.com
+      - key: NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: NEXT_PUBLIC_ENABLE_MOCK_LOGIN
+        value: "false"
 
   - type: keyvalue
     name: ai-pl-redis
